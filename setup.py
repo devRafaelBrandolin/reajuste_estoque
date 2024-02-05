@@ -17,3 +17,13 @@ setup(
     options={"build_exe": build_exe_options},
     executables=[Executable("main.py", base=base, icon='box.ico'),]
 )
+
+#----------------------------------------------------
+#--------- Comando para gerar o arquivo.exe ---------
+#----------------------------------------------------
+#---- No Terminal digite: python .\setup.py build ---
+#----------------------------------------------------
+#-- É Preciso ter a biblioteca cx-freeze instalada --
+#----------------------------------------------------
+#---- No Terminal digite: pip install cx-freeze -----
+#----------------------------------------------------
