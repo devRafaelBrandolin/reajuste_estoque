@@ -150,7 +150,7 @@ def entrada():
             #ESCREVE OS CABEÇALHOS DAS COLUNAS NO ARQUIVO DE TEXTO
             headers2 = [coluna.value for coluna in sheet1[1]]
             txt_file2.write(';'.join(map(str, headers2)) + '\n')
-            ##bar(8)
+            bar(8)
 
             #ITERA SOBRE AS LINHAS DA PLANILHA (começando da segunda linha, já que a primeira contém os cabeçalhos)
             for row in sheet1.iter_rows(min_row=2, values_only=True):
@@ -165,12 +165,212 @@ def entrada():
         bar_complete()
     else:
         messagebox.showerror("Error", f"O arquivo {nome_arquivo1} e ou {nome_arquivo2} não existe!!!\nExporte os relatórios do Wsac para continuar.")
+#-------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------
+
+def saida():
+    #VERIFICA SE OS ARQUIVOS EXISTEM
+    if os.path.isfile(nome_arquivo1) and os.path.isfile(nome_arquivo2):
+        bar(1)
+        #ABRE A PLANILHA DO EXCEL
+        planilha = openpyxl.load_workbook(nome_arquivo1)
+        #SELECIONA A PRIMEIRA ABA
+        aba = planilha.active
+        #PERCORRE CADA LINHA DA PLANILHA COMEÇANDO PELA SEGUNDA LINHA
+        for row in aba.iter_rows(min_row=2):
+            #OBTEM O VALOR DA CÉLULA NA COLUNA 2
+            valor = row[1].value
+            #VERIFICA SE É MENOR QUE 0
+            if valor < 0:
+                #DEFINE O VALOR PARA 0
+                row[1].value = 0
+        #DELETA A PLANILHA ANTIGA
+        os.remove(nome_arquivo1)
+        #SALVA A PLANILHA
+        planilha.save(nome_arquivo1)
+        bar(2)
+        
+        #REPETINDO O PROCESSO PARA A OUTRA PLANILHA
+        planilha = openpyxl.load_workbook(nome_arquivo2)
+        aba = planilha.active
+        for row in aba.iter_rows(min_row=2):
+            valor = row[2].value
+            if valor < 0:
+                row[2].value = 0
+        os.remove(nome_arquivo2)
+        planilha.save(nome_arquivo2)
+        bar(3)
+#----------------------------------------------------------------------------------
+#---Planilhas zeradas vamos criar o arquivo de saída do estoque -------------------
+#----------------------------------------------------------------------------------
+        # Leitura das planilhas
+        rhp_workbook = openpyxl.load_workbook(nome_arquivo1)
+        silvestre_workbook = openpyxl.load_workbook(nome_arquivo2)
+        estoque_real_workbook = openpyxl.load_workbook(nome_arquivo3)
+
+        # Criando nova planilha
+        nova_planilha = openpyxl.Workbook() #vamos salvar as saidas da silvestre aqui
+        nova_planilha_ativa = nova_planilha.active
+        nova_planilha2 = openpyxl.Workbook() #vamos salvar as saidas da rhp aqui
+        nova_planilha2_ativa = nova_planilha2.active
+
+        # Obter as folhas ativas
+        estoque_real_sheet = estoque_real_workbook.active
+        silvestre_sheet = silvestre_workbook.active
+        rhp_sheet = rhp_workbook.active
+
+        # Obtendo o número de linhas nas planilhas
+        num_linhas_silvestre = silvestre_sheet.max_row
+
+        # Para cada código na coluna B da planilha
+        for linha_silvestre in range(2, num_linhas_silvestre + 1):
+            codigo_silvestre = silvestre_sheet.cell(row=linha_silvestre, column=coluna_para_indice('B') + 1).value
+            if codigo_silvestre is not None:
+
+                # Procurar o código na coluna A da planilha estoque_real.xlsx
+                for linha_estoque_real in range(1, estoque_real_sheet.max_row + 1):
+                    codigo_estoque_real = estoque_real_sheet.cell(row=linha_estoque_real, column=coluna_para_indice('A') + 1).value
+
+                    if codigo_silvestre == codigo_estoque_real:
+                        # Obter os valores das células à direita
+                        valor_estoque_real = estoque_real_sheet.cell(row=linha_estoque_real, column=coluna_para_indice('B') + 1).value
+                        valor_silvestre = silvestre_sheet.cell(row=linha_silvestre, column=coluna_para_indice('C') + 1).value
+                        valor_cod_silvestre = silvestre_sheet.cell(row=linha_silvestre, column=coluna_para_indice('A') + 1).value
+                        valor_rhp = rhp_sheet.cell(row=linha_estoque_real, column=coluna_para_indice('B') + 1).value
+
+                        # Calcular a diferença
+                        diferenca = valor_estoque_real - valor_silvestre
+                        diferenca2 = valor_estoque_real - valor_rhp
+
+                        # Preencher a nova planilha
+                        nova_planilha_ativa.append([valor_cod_silvestre, codigo_silvestre, diferenca])
+                        nova_planilha2_ativa.append([codigo_estoque_real, diferenca2])
+                    
+        #deleta planilha antiga
+        os.remove(nome_arquivo2)
+        os.remove(nome_arquivo1)
+        bar(4)
+        # Salvar a nova planilha
+        nova_planilha.save(nome_arquivo2)
+        nova_planilha2.save(nome_arquivo1)      
+        bar(5)
+
+#----------------------------------------------------------------------------------
+#---criamos cada planilha com os valores de saída de cada estoque------------------
+#---vamos somar a saida dos 2 estoque para descobrir o estoque real----------------
+#----------------------------------------------------------------------------------
+        # Leitura das planilhas
+        rhp_workbook = openpyxl.load_workbook(nome_arquivo1)
+        silvestre_workbook = openpyxl.load_workbook(nome_arquivo2)
+        estoque_real_workbook = openpyxl.load_workbook(nome_arquivo3)
+
+        # Criando nova planilha
+        nova_planilha = openpyxl.Workbook() #vamos salvar as saidas da silvestre aqui
+        nova_planilha_ativa = nova_planilha.active
+        nova_planilha2 = openpyxl.Workbook() #vamos salvar as saidas da rhp aqui
+        nova_planilha2_ativa = nova_planilha2.active
+
+        # Obter as folhas ativas
+        estoque_real_sheet = estoque_real_workbook.active
+        silvestre_sheet = silvestre_workbook.active
+        rhp_sheet = rhp_workbook.active
+
+        # Obtendo o número de linhas nas planilhas
+        num_linhas_silvestre = silvestre_sheet.max_row
+        bar(6)
+
+        # Para cada código na coluna B da planilha
+        for linha_silvestre in range(1, num_linhas_silvestre + 1):
+            codigo_silvestre = silvestre_sheet.cell(row=linha_silvestre, column=coluna_para_indice('B') + 1).value
+
+            # Procurar o código na coluna A da planilha estoque_real.xlsx
+            for linha_estoque_real in range(1, estoque_real_sheet.max_row + 1):
+                codigo_estoque_real = estoque_real_sheet.cell(row=linha_estoque_real, column=coluna_para_indice('A') + 1).value
+
+                if codigo_silvestre == codigo_estoque_real:
+                    # Obter os valores das células à direita
+                    valor_estoque_real = estoque_real_sheet.cell(row=linha_estoque_real, column=coluna_para_indice('B') + 1).value
+                    valor_silvestre = silvestre_sheet.cell(row=linha_silvestre, column=coluna_para_indice('C') + 1).value
+                    valor_cod_silvestre = silvestre_sheet.cell(row=linha_silvestre, column=coluna_para_indice('A') + 1).value
+                    valor_rhp = rhp_sheet.cell(row=linha_silvestre, column=coluna_para_indice('B') + 1).value
+                    valor_cod_rhp = rhp_sheet.cell(row=linha_silvestre, column=coluna_para_indice('A') + 1).value
+
+                    # Calcular a diferença
+                    saida = valor_rhp + valor_silvestre #somando a saida dos 2 estoque
+                    estoque = valor_estoque_real - saida #pegando o estoque real e subtraindo a saida dos 2 estoques
+
+                    # Preencher a nova planilha
+                    nova_planilha_ativa.append([valor_cod_silvestre, estoque])
+                    nova_planilha2_ativa.append([valor_cod_rhp, estoque])
+                    
+        #deleta planilha antiga
+        bar(7)
+        os.remove(nome_arquivo2)
+        os.remove(nome_arquivo1)
+        # Salvar a nova planilha
+        nova_planilha.save(nome_arquivo2)
+        nova_planilha2.save(nome_arquivo1)    
+        bar(8)
+
+#----------------------------------------------------------------------------------
+#---agora vamos criar o arquivo de importação do estoque para cada estoque---------
+#----------------------------------------------------------------------------------
+        # Carrega a planilha
+        workbook2 = openpyxl.load_workbook(nome_arquivo2)
+        workbook1 = openpyxl.load_workbook(nome_arquivo1)
+
+        # Seleciona a primeira planilha
+        sheet2 = workbook2.active
+        # Obtendo a data atual
+        data_atual = datetime.datetime.now().strftime("%d-%m-%Y - %H-%M")
+        bar(9)
+        # Abre o arquivo de texto para escrita
+        with open(f'estoque_silvestre {data_atual}.txt', 'w') as txt_file2:
+            
+            # Escreve os cabeçalhos das colunas no arquivo de texto
+            headers2 = [coluna.value for coluna in sheet2[1]]
+            txt_file2.write(';'.join(map(str, headers2)) + '\n')
+
+            # Itera sobre as linhas da planilha (começando da segunda linha, já que a primeira contém os cabeçalhos)
+            for row in sheet2.iter_rows(min_row=2, values_only=True):
+                # Escreve os valores de cada coluna no arquivo de texto, separados por ponto e vírgula
+                txt_file2.write(';'.join(map(str, row)) + '\n')
+
+        # Seleciona a segunda planilha
+        sheet2 = workbook1.active
+        # Obtendo a data atual
+        data_atual = datetime.datetime.now().strftime("%d-%m-%Y - %H-%M")
+
+        # Abre o arquivo de texto para escrita
+        with open(f'estoque_rhp {data_atual}.txt', 'w') as txt_file2:
+            
+            # Escreve os cabeçalhos das colunas no arquivo de texto
+            headers2 = [coluna.value for coluna in sheet2[1]]
+            txt_file2.write(';'.join(map(str, headers2)) + '\n')
+
+            # Itera sobre as linhas da planilha (começando da segunda linha, já que a primeira contém os cabeçalhos)
+            for row in sheet2.iter_rows(min_row=2, values_only=True):
+                # Escreve os valores de cada coluna no arquivo de texto, separados por ponto e vírgula
+                txt_file2.write(';'.join(map(str, row)) + '\n')
+                
+        #deleta planilha antiga
+        os.remove(nome_arquivo1)
+        os.remove(nome_arquivo2)
+        os.remove(nome_arquivo3)
+        bar(10)
+        bar_complete()        
+    else:
+        messagebox.showerror("Error", f"O arquivo {nome_arquivo1} e ou {nome_arquivo2} não existe!!!\nExporte os relatórios do Wsac para continuar.")
+#-------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------
 
 def button_entrada():
     entrada()
     
 def button_saida():
-    pass
+    saida()
 
 def sair():
     janela.destroy()
