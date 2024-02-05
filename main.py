@@ -4,14 +4,24 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 import subprocess
+import os
 
+#-------------------------------------
+#---------DEFININDO VARIAVEIS-----------
+#-------------------------------------
+nome_arquivo1 = 'rhp.xlsx'
+nome_arquivo2 = 'silvestre.xlsx'
+nome_arquivo3 = 'real.xlsx'
 
 #-------------------------------------
 #---------DEFININDO FUNÇÕES-----------
 #-------------------------------------
 
 def button_refresh():
-    pass
+    if os.path.isfile(nome_arquivo1) and os.path.isfile(nome_arquivo2):
+        print(f'O arquivo existe na pasta do projeto.')
+    else:
+        messagebox.showerror("Error", f"O arquivo {nome_arquivo1} e ou {nome_arquivo2} não existe!!!\nExporte os relatórios do Wsac para continuar.")
 
 def button_entrada():
     pass
