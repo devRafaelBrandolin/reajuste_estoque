@@ -7,6 +7,7 @@ import subprocess
 import os
 import openpyxl
 import datetime
+from time import sleep
 
 #-------------------------------------
 #---------DEFININDO VARIAVEIS-----------
@@ -20,6 +21,31 @@ version = '1.0'
 #---------DEFININDO FUNÇÕES-----------
 #-------------------------------------
 
+prog = 0
+def bar(valor):
+    progressbar['value'] = (prog + valor) * 10
+    janela.update()
+
+def bar_complete():
+    label_complete.place(relx=0.05, rely=0.72)
+    # Atualiza a barra de progresso
+    def update_progress(value):
+        progressbar['value'] = value
+        janela.update()
+
+    # Cria uma animação de progresso completa
+    for i in range(3):
+        update_progress((prog + 0) * 10)
+        sleep(0.1)
+        update_progress((prog + 10) * 10)
+        sleep(0.1)
+
+    # Exibe a conclusão
+    sleep(2)
+    label_complete.place_forget()
+    progressbar['value'] = 0
+    janela.update()
+
 def button_refresh():
     if os.path.isfile(nome_arquivo1) and os.path.isfile(nome_arquivo2):
         print(f'O arquivo existe na pasta do projeto.')
@@ -32,6 +58,7 @@ def coluna_para_indice(coluna):
 def entrada():
     #VERIFICANDO SE OS ARQUIVOS EXISTEM
     if os.path.isfile(nome_arquivo1) and os.path.isfile(nome_arquivo2):
+        bar(1)
         #ABRINDO UMA PLANILHA DO EXCEL
         planilha = openpyxl.load_workbook(nome_arquivo1)
         #SELECIONANDO A PRIMEIRA ABA DA PLANILHA
@@ -46,6 +73,7 @@ def entrada():
                 row[1].value = 0
         #DELETA A PLANILHA ANTIGA
         os.remove(nome_arquivo1)
+        bar(2)
         #SALVA A PLANILHA ATUALIZADA E CRIA UMA NOVA PLANILHA PARA USAR DE BASE
         planilha.save(nome_arquivo1)
         planilha.save(nome_arquivo3)
@@ -58,6 +86,7 @@ def entrada():
             if valor < 0:
                 row[2].value = 0
         os.remove(nome_arquivo2)
+        bar(3)
         planilha.save(nome_arquivo2)
 #----------------------------------------------------------------------------------
 #---PLANILHAS ZERADAS, VAMOS IGUALAR OS VALORES------------------------------------
@@ -76,6 +105,7 @@ def entrada():
 
         #OBTENDO O NUMERO MAXIMO DE LINHAS
         num_linhas_silvestre = silvestre_sheet.max_row
+        bar(4)
 
         #PERCORRENDO CADA LINHA DA PLANILHA
         for linha_silvestre in range(2, num_linhas_silvestre + 1):
@@ -98,6 +128,7 @@ def entrada():
 
         #DELETA A PLANILHA ANTIGA
         os.remove(nome_arquivo2)
+        bar(5)
         #SALVA A PLANILHA NOVA
         nova_planilha.save(nome_arquivo2)
 #----------------------------------------------------------------------------------
@@ -105,11 +136,13 @@ def entrada():
 #----------------------------------------------------------------------------------
         #CARREGANDO A PLANILHA
         workbook1 = openpyxl.load_workbook(nome_arquivo2)
+        bar(6)
 
         #SELECIONA PLANILHA
         sheet1 = workbook1.active
         #OBTENDO DATA ATUAL
         data_atual = datetime.datetime.now().strftime("%d-%m-%Y")
+        bar(7)
 
         #ABRE O ARQUIVO DE TEXTO PARA COLOCARMOS OS DADOS
         with open(f'estoque_silvestre {data_atual}.txt', 'w') as txt_file2:
@@ -117,6 +150,7 @@ def entrada():
             #ESCREVE OS CABEÇALHOS DAS COLUNAS NO ARQUIVO DE TEXTO
             headers2 = [coluna.value for coluna in sheet1[1]]
             txt_file2.write(';'.join(map(str, headers2)) + '\n')
+            ##bar(8)
 
             #ITERA SOBRE AS LINHAS DA PLANILHA (começando da segunda linha, já que a primeira contém os cabeçalhos)
             for row in sheet1.iter_rows(min_row=2, values_only=True):
@@ -124,8 +158,11 @@ def entrada():
                 txt_file2.write(';'.join(map(str, row)) + '\n')
         
         #DELETA AS PLANILHAS ANTIGAS
+        bar(9)
         os.remove(nome_arquivo1)
         os.remove(nome_arquivo2)
+        bar(10)
+        bar_complete()
     else:
         messagebox.showerror("Error", f"O arquivo {nome_arquivo1} e ou {nome_arquivo2} não existe!!!\nExporte os relatórios do Wsac para continuar.")
 
@@ -203,6 +240,13 @@ botao2.grid(row=1, column=1, pady=5)
 
 botao3 = tk.Button(janela, text="Saída", font=("Arial", 10, "bold"), width='10', command=button_saida)
 botao3.grid(row=1, column=2, pady=5)
+
+progressbar = ttk.Progressbar(janela, orient='horizontal', length=160, mode='determinate')
+progressbar.place(relx=0.05, rely=0.61)
+
+label_complete = tk.Label(janela,text='Complete!!!')
+label_complete.place(relx=0.05, rely=0.72)
+label_complete.place_forget()
 
 botao6 = tk.Button(janela, text="SAIR", font=("Arial", 10, "bold"), width='10', command=sair)
 botao6.grid(row=2, column=2, pady=8)
