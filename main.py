@@ -2,7 +2,8 @@
 #------IMPORTANDO BIBLIOTECAS---------
 #-------------------------------------
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
+import subprocess
 
 
 #-------------------------------------
@@ -19,16 +20,23 @@ def button_saida():
     pass
 
 def sair():
-    pass
+    janela.destroy()
 
 def sobre():
-    pass
+    tk.messagebox.showinfo("Sobre", "Esta aplicação foi desenvolvida para suprir a necessidade de manter atualizado o estoque da empresa.\nO objetivo é trabalhar com as planilhas de relatorio dos estoques e gerenciar os dados para importar um novo relatorio com o estoque atualizado!\nPara saber mais acesse o meu GitHub.")
 
 def github():
-    pass
+    import webbrowser
+    webbrowser.open("https://github.com/devRafaelBrandolin")
 
 def abrir_pasta_projeto():
-    pass
+    try:
+        subprocess.Popen(['explorer', '.'])  # No Windows
+    except OSError:
+        try:
+            subprocess.Popen(['xdg-open', '.'])  # No Linux
+        except OSError:
+            tk.messagebox.showerror("Erro", "Não foi possível abrir a pasta do projeto.")
 
 #-------------------------------------
 #---------CRIANDO JANELA--------------
