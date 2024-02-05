@@ -12,6 +12,7 @@ import os
 nome_arquivo1 = 'rhp.xlsx'
 nome_arquivo2 = 'silvestre.xlsx'
 nome_arquivo3 = 'real.xlsx'
+version = '1.0'
 
 #-------------------------------------
 #---------DEFININDO FUNÇÕES-----------
@@ -53,7 +54,7 @@ def abrir_pasta_projeto():
 #-------------------------------------
 janela = tk.Tk()
 #DEFININDO UM TITULO PARA JANELA
-janela.title("Reajuste - Wsac")
+janela.title(f"Reajuste - Wsac {version}")
 #DEFININDO O TAMANHO DA JANELA
 janela.geometry('300x200')
 #IMPEDINDO QUE A JANELA SEJE REDIMENSIONÁVEL
