@@ -15,7 +15,7 @@ from time import sleep
 nome_arquivo1 = 'rhp.xlsx'
 nome_arquivo2 = 'silvestre.xlsx'
 nome_arquivo3 = 'real.xlsx'
-version = '1.0'
+version = '2.0'
 
 #-------------------------------------
 #---------DEFININDO FUNÇÕES-----------
@@ -190,7 +190,7 @@ def saida():
         #SALVA A PLANILHA
         planilha.save(nome_arquivo1)
         bar(2)
-        
+       
         #REPETINDO O PROCESSO PARA A OUTRA PLANILHA
         planilha = openpyxl.load_workbook(nome_arquivo2)
         aba = planilha.active
@@ -201,6 +201,7 @@ def saida():
         os.remove(nome_arquivo2)
         planilha.save(nome_arquivo2)
         bar(3)
+
 #----------------------------------------------------------------------------------
 #---Planilhas zeradas vamos criar o arquivo de saída do estoque -------------------
 #----------------------------------------------------------------------------------
@@ -238,14 +239,25 @@ def saida():
                         valor_silvestre = silvestre_sheet.cell(row=linha_silvestre, column=coluna_para_indice('C') + 1).value
                         valor_cod_silvestre = silvestre_sheet.cell(row=linha_silvestre, column=coluna_para_indice('A') + 1).value
                         valor_rhp = rhp_sheet.cell(row=linha_estoque_real, column=coluna_para_indice('B') + 1).value
-
+                        
+                        if valor_estoque_real > valor_silvestre:
                         # Calcular a diferença
-                        diferenca = valor_estoque_real - valor_silvestre
-                        diferenca2 = valor_estoque_real - valor_rhp
+                            diferenca = valor_estoque_real - valor_silvestre
+                        else:
+                            diferenca = 0
+                        if valor_estoque_real > valor_rhp:
+                            diferenca2 = valor_estoque_real - valor_rhp
+                        else:
+                            diferenca2 = 0
+                        
+                        saida_ = diferenca + diferenca2
+                        saida_total = valor_estoque_real - saida_
+                        print(saida_)
+                        print(saida_total)
 
                         # Preencher a nova planilha
-                        nova_planilha_ativa.append([valor_cod_silvestre, codigo_silvestre, diferenca])
-                        nova_planilha2_ativa.append([codigo_estoque_real, diferenca2])
+                        nova_planilha_ativa.append([valor_cod_silvestre, saida_total])
+                        nova_planilha2_ativa.append([codigo_estoque_real, saida_total])
                     
         #deleta planilha antiga
         os.remove(nome_arquivo2)
@@ -257,65 +269,14 @@ def saida():
         bar(5)
 
 #----------------------------------------------------------------------------------
-#---criamos cada planilha com os valores de saída de cada estoque------------------
-#---vamos somar a saida dos 2 estoque para descobrir o estoque real----------------
-#----------------------------------------------------------------------------------
-        # Leitura das planilhas
-        rhp_workbook = openpyxl.load_workbook(nome_arquivo1)
-        silvestre_workbook = openpyxl.load_workbook(nome_arquivo2)
-        estoque_real_workbook = openpyxl.load_workbook(nome_arquivo3)
-
-        # Criando nova planilha
-        nova_planilha = openpyxl.Workbook() #vamos salvar as saidas da silvestre aqui
-        nova_planilha_ativa = nova_planilha.active
-        nova_planilha2 = openpyxl.Workbook() #vamos salvar as saidas da rhp aqui
-        nova_planilha2_ativa = nova_planilha2.active
-
-        # Obter as folhas ativas
-        estoque_real_sheet = estoque_real_workbook.active
-        silvestre_sheet = silvestre_workbook.active
-        rhp_sheet = rhp_workbook.active
-
-        # Obtendo o número de linhas nas planilhas
-        num_linhas_silvestre = silvestre_sheet.max_row
-        bar(6)
-
-        # Para cada código na coluna B da planilha
-        for linha_silvestre in range(1, num_linhas_silvestre + 1):
-            codigo_silvestre = silvestre_sheet.cell(row=linha_silvestre, column=coluna_para_indice('B') + 1).value
-
-            # Procurar o código na coluna A da planilha estoque_real.xlsx
-            for linha_estoque_real in range(1, estoque_real_sheet.max_row + 1):
-                codigo_estoque_real = estoque_real_sheet.cell(row=linha_estoque_real, column=coluna_para_indice('A') + 1).value
-
-                if codigo_silvestre == codigo_estoque_real:
-                    # Obter os valores das células à direita
-                    valor_estoque_real = estoque_real_sheet.cell(row=linha_estoque_real, column=coluna_para_indice('B') + 1).value
-                    valor_silvestre = silvestre_sheet.cell(row=linha_silvestre, column=coluna_para_indice('C') + 1).value
-                    valor_cod_silvestre = silvestre_sheet.cell(row=linha_silvestre, column=coluna_para_indice('A') + 1).value
-                    valor_rhp = rhp_sheet.cell(row=linha_silvestre, column=coluna_para_indice('B') + 1).value
-                    valor_cod_rhp = rhp_sheet.cell(row=linha_silvestre, column=coluna_para_indice('A') + 1).value
-
-                    # Calcular a diferença
-                    saida = valor_rhp + valor_silvestre #somando a saida dos 2 estoque
-                    estoque = valor_estoque_real - saida #pegando o estoque real e subtraindo a saida dos 2 estoques
-
-                    # Preencher a nova planilha
-                    nova_planilha_ativa.append([valor_cod_silvestre, estoque])
-                    nova_planilha2_ativa.append([valor_cod_rhp, estoque])
-                    
-        #deleta planilha antiga
-        bar(7)
-        os.remove(nome_arquivo2)
-        os.remove(nome_arquivo1)
-        # Salvar a nova planilha
-        nova_planilha.save(nome_arquivo2)
-        nova_planilha2.save(nome_arquivo1)    
-        bar(8)
-
-#----------------------------------------------------------------------------------
 #---agora vamos criar o arquivo de importação do estoque para cada estoque---------
 #----------------------------------------------------------------------------------
+
+        # Verifica se a pasta 'backup' existe
+        if not os.path.exists('backup'):
+            # Se não existir, cria a pasta
+            os.makedirs('backup')
+            
         # Carrega a planilha
         workbook2 = openpyxl.load_workbook(nome_arquivo2)
         workbook1 = openpyxl.load_workbook(nome_arquivo1)
@@ -325,8 +286,13 @@ def saida():
         # Obtendo a data atual
         data_atual = datetime.datetime.now().strftime("%d-%m-%Y - %H-%M")
         bar(9)
+        
+        # Caminho completo para o arquivo de texto dentro da pasta 'backup'
+        file_path = os.path.join('backup', f'estoque_silvestre {data_atual}.txt')
+
+
         # Abre o arquivo de texto para escrita
-        with open(f'estoque_silvestre {data_atual}.txt', 'w') as txt_file2:
+        with open(file_path, 'w') as txt_file2:
             
             # Escreve os cabeçalhos das colunas no arquivo de texto
             headers2 = [coluna.value for coluna in sheet2[1]]
@@ -342,8 +308,12 @@ def saida():
         # Obtendo a data atual
         data_atual = datetime.datetime.now().strftime("%d-%m-%Y - %H-%M")
 
+        # Caminho completo para o arquivo de texto dentro da pasta 'backup'
+        file_path = os.path.join('backup', f'estoque_rhp {data_atual}.txt')
+
+
         # Abre o arquivo de texto para escrita
-        with open(f'estoque_rhp {data_atual}.txt', 'w') as txt_file2:
+        with open(file_path, 'w') as txt_file2:
             
             # Escreve os cabeçalhos das colunas no arquivo de texto
             headers2 = [coluna.value for coluna in sheet2[1]]
@@ -362,6 +332,7 @@ def saida():
         bar_complete()        
     else:
         messagebox.showerror("Error", f"O arquivo {nome_arquivo1} e ou {nome_arquivo2} não existe!!!\nExporte os relatórios do Wsac para continuar.")
+
 #-------------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------------
@@ -398,9 +369,15 @@ janela = tk.Tk()
 #DEFININDO UM TITULO PARA JANELA
 janela.title(f"Reajuste - Wsac {version}")
 #DEFININDO O TAMANHO DA JANELA
-janela.geometry('300x200')
+janela.geometry('300x220')
 #IMPEDINDO QUE A JANELA SEJE REDIMENSIONÁVEL
 janela.resizable(width=False, height=False)
+
+# Caminho para o ícone (.ico no Windows)
+icon_path = './box.ico'
+
+# Definir o ícone da aplicação
+janela.iconbitmap(icon_path)
 
 #-------------------------------------
 #-----CRIANDO WIDGETS DA JANELA-------
